@@ -60,9 +60,12 @@ resource "aws_internet_gateway" "tms_ig" {
 }
 
 # # 추후 증설 필요 각 public 서브넷에 맞도록
-# resource "aws_eip" "nat" {
-#   domain = "vpc"
-# }
+resource "aws_eip" "tms_nlb_eip" {
+  domain = "vpc"
+  tags = {
+    Name = "tms-nlb-eip"
+  }
+}
 
 # # 추후 증설 필요 각 public 서브넷에 맞도록
 # resource "aws_nat_gateway" "tms_subnet_nat" {

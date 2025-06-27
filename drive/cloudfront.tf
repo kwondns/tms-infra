@@ -18,7 +18,7 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   lifecycle {
     create_before_destroy = true
   }
-  aliases = ["tms.kwondns.com"]
+  aliases = ["drive.kwondns.com"]
 
   default_cache_behavior {
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
@@ -45,5 +45,15 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     response_code      = 200
     response_page_path = "/index.html"
   }
+  custom_error_response {
+    error_code         = 403
+    response_code      = 200
+    response_page_path = "/index.html"
+  }
+
+  depends_on = [
+    aws_s3_bucket.website_bucket,
+    aws_s3_bucket_website_configuration.website_config
+  ]
 }
 

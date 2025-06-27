@@ -14,6 +14,15 @@ resource "aws_codebuild_project" "tms_fe_build" {
     image                       = "aws/codebuild/standard:6.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
+    environment_variable {
+      name  = "VITE_API_SERVER_URL"
+      value = "https://api.kwondns.com"
+    }
+
+    environment_variable {
+      name  = "VITE_WS_SERVER_URL"
+      value = "wss://api.kwondns.com"
+    }
   }
 
   source {

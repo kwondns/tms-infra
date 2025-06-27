@@ -13,33 +13,103 @@ data "aws_route53_zone" "tms" {
 }
 
 module "be" {
-  source           = "./be"
-  project          = var.project
-  instance_type    = var.instance_type
-  instance_ami     = var.instance_ami
-  env              = var.env
-  region           = var.region
-  az_a             = var.az_a
-  az_b             = var.az_b
-  az_c             = var.az_c
-  az_d             = var.az_d
-  account_id       = var.account_id
-  tms_cert_arn     = aws_acm_certificate.tms_cert.arn
-  tms_route53_zone = data.aws_route53_zone.tms.zone_id
-  tms_cert         = aws_acm_certificate_validation.tms_cert.certificate_arn
+  source            = "./be"
+  project           = var.project
+  instance_type     = var.instance_type
+  instance_ami      = var.instance_ami
+  env               = var.env
+  region            = var.region
+  az_a              = var.az_a
+  az_b              = var.az_b
+  az_c              = var.az_c
+  az_d              = var.az_d
+  account_id        = var.account_id
+  tms_cert_arn      = aws_acm_certificate.tms_cert.arn
+  tms_route53_zone  = data.aws_route53_zone.tms.zone_id
+  tms_cert          = aws_acm_certificate_validation.tms_cert.certificate_arn
+  github_connection = aws_codeconnections_connection.github.arn
 }
 
 module "fe" {
-  source        = "./fe"
-  project       = var.project
-  instance_type = var.instance_type
-  instance_ami  = var.instance_ami
-  env           = var.env
-  region        = var.region
-  az_a          = var.az_a
-  az_b          = var.az_b
-  az_c          = var.az_c
-  az_d          = var.az_d
-  account_id    = var.account_id
-  acm_cert_arn  = aws_acm_certificate.tms_cert_wildcard.arn
+  source            = "./fe"
+  project           = var.project
+  instance_type     = var.instance_type
+  instance_ami      = var.instance_ami
+  env               = var.env
+  region            = var.region
+  az_a              = var.az_a
+  az_b              = var.az_b
+  az_c              = var.az_c
+  az_d              = var.az_d
+  account_id        = var.account_id
+  acm_cert_arn      = aws_acm_certificate.tms_cert_wildcard.arn
+  github_connection = aws_codeconnections_connection.github.arn
+}
+
+module "port" {
+  source            = "./portfolio"
+  project           = "portfolio"
+  instance_type     = var.instance_type
+  instance_ami      = var.instance_ami
+  env               = var.env
+  region            = var.region
+  az_a              = var.az_a
+  az_b              = var.az_b
+  az_c              = var.az_c
+  az_d              = var.az_d
+  account_id        = var.account_id
+  acm_cert_arn      = aws_acm_certificate.tms_cert_wildcard.arn
+  bucket_name       = "tms-port-web-site"
+  github_connection = aws_codeconnections_connection.github.arn
+}
+
+module "drive" {
+  source            = "./drive"
+  project           = "drive"
+  instance_type     = var.instance_type
+  instance_ami      = var.instance_ami
+  env               = var.env
+  region            = var.region
+  az_a              = var.az_a
+  az_b              = var.az_b
+  az_c              = var.az_c
+  az_d              = var.az_d
+  account_id        = var.account_id
+  acm_cert_arn      = aws_acm_certificate.tms_cert_wildcard.arn
+  bucket_name       = "tms-drive-web-site"
+  github_connection = aws_codeconnections_connection.github.arn
+}
+
+module "house" {
+  source            = "./house-connect"
+  project           = "house-connect"
+  instance_type     = var.instance_type
+  instance_ami      = var.instance_ami
+  env               = var.env
+  region            = var.region
+  az_a              = var.az_a
+  az_b              = var.az_b
+  az_c              = var.az_c
+  az_d              = var.az_d
+  account_id        = var.account_id
+  acm_cert_arn      = aws_acm_certificate.tms_cert_wildcard.arn
+  bucket_name       = "tms-house-web-site"
+  github_connection = aws_codeconnections_connection.github.arn
+}
+
+module "timeline" {
+  source            = "./timeline"
+  project           = "timeline"
+  instance_type     = var.instance_type
+  instance_ami      = var.instance_ami
+  env               = var.env
+  region            = var.region
+  az_a              = var.az_a
+  az_b              = var.az_b
+  az_c              = var.az_c
+  az_d              = var.az_d
+  account_id        = var.account_id
+  acm_cert_arn      = aws_acm_certificate.tms_cert_wildcard.arn
+  bucket_name       = "tms-timeline-web-site"
+  github_connection = aws_codeconnections_connection.github.arn
 }

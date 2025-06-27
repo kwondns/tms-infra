@@ -16,6 +16,7 @@ data "aws_iam_policy_document" "s3_policy" {
   }
 }
 
+
 resource "aws_iam_role" "codebuild_fe_role" {
   name = "${var.project}-fe-codebuild-role"
   assume_role_policy = jsonencode({

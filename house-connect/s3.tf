@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "website_bucket" {
-  bucket = "tms-web-site"
+  bucket = var.bucket_name
 }
 
 resource "aws_s3_bucket_website_configuration" "website_config" {
@@ -22,3 +22,4 @@ resource "aws_s3_bucket_public_access_block" "website_pab" {
   ignore_public_acls      = false
   restrict_public_buckets = false
 }
+

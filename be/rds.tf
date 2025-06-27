@@ -12,7 +12,7 @@ resource "aws_db_instance" "tms_db" {
   db_subnet_group_name = aws_db_subnet_group.tms_db_subnet.name
   vpc_security_group_ids = [aws_security_group.tms_rds_sg.id]
   skip_final_snapshot  = true
-  publicly_accessible  = true
+  publicly_accessible  = false
 }
 
 resource "aws_db_subnet_group" "tms_db_subnet" {

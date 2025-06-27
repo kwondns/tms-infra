@@ -1,5 +1,4 @@
 variable "bucket_name" { type = string }
-variable "ec2_role_arn" { type = string }
 
 resource "aws_s3_bucket" "this" {
   bucket        = var.bucket_name

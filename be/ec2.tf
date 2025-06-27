@@ -1,13 +1,13 @@
 resource "aws_instance" "tms_backend_a" {
   ami           = var.instance_ami
   instance_type = var.instance_type
-  subnet_id     = aws_subnet.tms_public_subnet_a.id
+  subnet_id     = aws_subnet.tms_public_subnet_c.id
   vpc_security_group_ids = [
     aws_security_group.tms_public_sg.id,
     aws_security_group.tms_ec2_sg.id
   ]
-  iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
-  key_name             = aws_key_pair.tms_ec2_key.key_name
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+  key_name                    = aws_key_pair.tms_ec2_key.key_name
   tags = {
     Name   = "tms_backend_a"
     deploy = "CodeDeploy"
@@ -39,53 +39,128 @@ resource "local_sensitive_file" "private_key_pem" {
 resource "aws_lb" "tms_backend_lb" {
   name               = "tms-backend-lb"
   internal           = false
-  load_balancer_type = "application"
+  load_balancer_type = "network"
+  subnet_mapping {
+    subnet_id     = aws_subnet.tms_public_subnet_c.id
+    allocation_id = aws_eip.tms_nlb_eip.id
+  }
+  tags = {
+    Name = "tms-nlb"
+  }
   security_groups = [aws_security_group.tms_lb_sg.id]
-  subnets = [aws_subnet.tms_public_subnet_a.id, aws_subnet.tms_public_subnet_c.id]
 }
 
-resource "aws_lb_target_group" "tms_tg" {
+resource "aws_lb_target_group" "tms_be_tg" {
   name     = "tms-backend-tg"
   port     = 5440
-  protocol = "HTTP"
+  protocol = "TCP"
   vpc_id   = aws_vpc.tms_vpc.id
   health_check {
-    path                = "/health"
-    protocol            = "HTTP"
-    matcher             = "200-399"
+    protocol            = "TCP"
+    port                = "5440"
     interval            = 30
     healthy_threshold   = 2
     unhealthy_threshold = 2
-    timeout             = 5
+  }
+  preserve_client_ip = true
+}
+
+resource "aws_lb_target_group" "tms_ssh_tg" {
+  name     = "tms-backend-ssh-tg"
+  port     = 9981
+  protocol = "TCP"
+  vpc_id   = aws_vpc.tms_vpc.id
+  health_check {
+    protocol            = "TCP"
+    port                = "9981"
+    interval            = 30
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+  preserve_client_ip = true
+}
+
+resource "aws_lb_target_group" "tms_rds_tg" {
+  name_prefix = "tms-tg"
+  port        = 5432
+  protocol    = "TCP"
+  vpc_id      = aws_vpc.tms_vpc.id
+  target_type = "ip"
+  tags = {
+    Name = "tms-rds-tg"
+  }
+
+  health_check {
+    protocol            = "TCP"
+    port                = "5432"
+    interval            = 30
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
   }
 }
 
 resource "aws_lb_listener" "tms_https" {
   load_balancer_arn = aws_lb.tms_backend_lb.arn
   port              = 443
-  protocol          = "HTTPS"
+  protocol          = "TLS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = var.tms_cert_arn
-  depends_on        = [var.tms_cert]
+  depends_on = [var.tms_cert]
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.tms_tg.arn
+    target_group_arn = aws_lb_target_group.tms_be_tg.arn
+  }
+}
+
+resource "aws_lb_listener" "tms_ssh" {
+  load_balancer_arn = aws_lb.tms_backend_lb.arn
+  port              = "9981"
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.tms_ssh_tg.arn
+  }
+}
+
+resource "aws_lb_listener" "tms_rds" {
+  load_balancer_arn = aws_lb.tms_backend_lb.arn
+  port              = "5432"
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.tms_rds_tg.arn
   }
 }
 
 resource "aws_lb_target_group_attachment" "tms_tg_attach" {
-  target_group_arn = aws_lb_target_group.tms_tg.arn
+  target_group_arn = aws_lb_target_group.tms_be_tg.arn
   target_id        = aws_instance.tms_backend_a.id
   port             = 5440
+}
+
+resource "aws_lb_target_group_attachment" "tms_tg_ssh_attach" {
+  target_group_arn = aws_lb_target_group.tms_ssh_tg.arn
+  target_id        = aws_instance.tms_backend_a.id
+  port             = 9981
+}
+
+# RDS IP 주소를 얻기 위한 데이터 소스
+data "dns_a_record_set" "rds_ip" {
+  host = aws_db_instance.tms_db.address
+}
+
+resource "aws_lb_target_group_attachment" "tms_rds_attach" {
+  target_group_arn = aws_lb_target_group.tms_rds_tg.arn
+  target_id        = data.dns_a_record_set.rds_ip.addrs[0]
+  port             = 5432
 }
 
 resource "aws_route53_record" "api_tms" {
   zone_id = var.tms_route53_zone
   name    = "api.kwondns.com"
   type    = "A"
-  alias {
-    name                   = aws_lb.tms_backend_lb.dns_name
-    zone_id                = aws_lb.tms_backend_lb.zone_id
-    evaluate_target_health = true
-  }
+  ttl     = 300
+  records = [aws_eip.tms_nlb_eip.public_ip]
 }

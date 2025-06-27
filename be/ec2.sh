@@ -23,16 +23,17 @@ npm install -g @nestjs/cli
 npm install pm2@latest -g
 
 # Redis 설치 (BullMQ용)
-amazon-linux-extras install -y redis6
-systemctl enable redis
-systemctl start redis
+sudo dnf update -y
+sudo dnf install redis6 -y
+sudo systemctl enable redis6
+sudo systemctl start redis6
 
 # Redis가 잘 설치/실행됐는지 확인 로그
-systemctl status redis
+systemctl status redis6
 
 # 설치 버전 확인
 node -v
 npm -v
 yarn -v
 pm2 -v
-redis-cli ping
+redis6-cli ping

@@ -1,6 +1,7 @@
 resource "aws_s3_bucket_policy" "this" {
   bucket = aws_s3_bucket.website_bucket.id
   policy = data.aws_iam_policy_document.s3_policy.json
+  depends_on = [aws_s3_bucket_public_access_block.website_pab]
 }
 
 data "aws_iam_policy_document" "s3_policy" {
