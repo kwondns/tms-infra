@@ -40,18 +40,6 @@ resource "aws_codepipeline" "fe-pipeline" {
 
       configuration = {
         ProjectName = aws_codebuild_project.tms_fe_build.name
-        # EnvironmentVariables = jsonencode([
-        #   {
-        #     name  = "DB_HOST"
-        #     value = aws_db_proxy.tms_db_proxy.endpoint
-        #     type  = "PLAINTEXT"
-        #   },
-        #   {
-        #     name  = "DB_PORT"
-        #     value = var.db_port
-        #     type  = "PLAINTEXT"
-        #   },
-        # ])
       }
     }
   }

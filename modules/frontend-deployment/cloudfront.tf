@@ -18,7 +18,7 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   lifecycle {
     create_before_destroy = true
   }
-  aliases = ["drive.kwondns.com"]
+  aliases = [var.cloudfront_alias]
 
   default_cache_behavior {
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
