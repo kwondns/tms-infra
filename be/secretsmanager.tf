@@ -29,6 +29,7 @@ resource "aws_secretsmanager_secret_version" "tms_secret_version" {
     elasticache_port          = var.elasticache_port
     s3_tmp_archive_bucket     = var.s3_tmp_archive_bucket
     front_url                 = var.front_url
+    chatbot_url               = aws_api_gateway_domain_name.chat_bot_domain.domain_name
 
     # google_client_id     = var.google_client_id
     # google_client_secret = var.google_client_secret
