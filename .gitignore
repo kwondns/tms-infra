@@ -38,3 +38,5 @@ terraform.rc
 *.hcl
 *.iml
 *.pem
+
+be/chatbot_layer/
