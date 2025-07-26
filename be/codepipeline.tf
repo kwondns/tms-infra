@@ -40,18 +40,6 @@ resource "aws_codepipeline" "pipeline" {
 
       configuration = {
         ProjectName = aws_codebuild_project.tms_build.name
-        # EnvironmentVariables = jsonencode([
-        #   {
-        #     name  = "DB_HOST"
-        #     value = aws_db_proxy.tms_db_proxy.endpoint
-        #     type  = "PLAINTEXT"
-        #   },
-        #   {
-        #     name  = "DB_PORT"
-        #     value = var.db_port
-        #     type  = "PLAINTEXT"
-        #   },
-        # ])
       }
     }
   }
@@ -167,6 +155,100 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         #   "arn:aws:codedeploy:${var.region}:${var.account_id}:deploymentconfig:CodeDeployDefault.OneAtATime"
         # ]
         Resource = "*"
+      }
+    ]
+  })
+}
+
+
+resource "aws_codepipeline" "timeline_chatbot_pipeline" {
+  name     = "${var.project}-timeline_chatbot-pipeline"
+  role_arn = aws_iam_role.codepipeline_role.arn
+
+  artifact_store {
+    location = aws_s3_bucket.timeline-chatbot-artifact_bucket.bucket
+    type     = "S3"
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name     = "Source"
+      category = "Source"
+      owner    = "AWS"
+      provider = "CodeStarSourceConnection"
+      version  = "1"
+      output_artifacts = ["source_output"]
+
+      configuration = {
+        ConnectionArn    = var.github_connection
+        FullRepositoryId = var.github_timeline_chatbot_repo
+        BranchName       = var.github_timeline_chatbot_branch
+      }
+    }
+  }
+
+  stage {
+    name = "Deploy"
+
+    action {
+      name     = "Timeline_Chatbot_Lambda_Deploy"
+      category = "Deploy"
+      owner    = "AWS"
+      provider = "Lambda"
+      input_artifacts = ["source_output"]
+      version  = "1"
+      configuration = {
+        FunctionName = aws_lambda_function.timeline_chatbot.function_name
+      }
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "codepipeline_s3_access" {
+  name = "AllowChatbotCodePipelineS3Access"
+  role = aws_iam_role.codepipeline_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:ListBucket",
+          "s3:GetBucketVersioning"
+        ]
+        Resource = [
+          aws_s3_bucket.timeline-chatbot-artifact_bucket.arn,
+          "${aws_s3_bucket.timeline-chatbot-artifact_bucket.arn}/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = [
+          "arn:aws:logs:ap-northeast-2:217260976611:log-group:/aws/codepipeline/tms-timeline_chatbot-pipeline*",
+          "arn:aws:logs:ap-northeast-2:217260976611:log-group:/aws/codepipeline/tms-timeline_chatbot-pipeline:*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:UpdateFunctionCode",
+          "lambda:PublishVersion",
+          "lambda:GetFunctionConfiguration"
+        ]
+        Resource = [
+          aws_lambda_function.timeline_chatbot.arn
+        ]
       }
     ]
   })

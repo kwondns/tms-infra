@@ -13,21 +13,22 @@ data "aws_route53_zone" "tms" {
 }
 
 module "be" {
-  source            = "./be"
-  project           = var.project
-  instance_type     = var.instance_type
-  instance_ami      = var.instance_ami
-  env               = var.env
-  region            = var.region
-  az_a              = var.az_a
-  az_b              = var.az_b
-  az_c              = var.az_c
-  az_d              = var.az_d
-  account_id        = var.account_id
-  tms_cert_arn      = aws_acm_certificate.tms_cert.arn
-  tms_route53_zone  = data.aws_route53_zone.tms.zone_id
-  tms_cert          = aws_acm_certificate_validation.tms_cert.certificate_arn
-  github_connection = aws_codeconnections_connection.github.arn
+  source                = "./be"
+  project               = var.project
+  instance_type         = var.instance_type
+  instance_ami          = var.instance_ami
+  env                   = var.env
+  region                = var.region
+  az_a                  = var.az_a
+  az_b                  = var.az_b
+  az_c                  = var.az_c
+  az_d                  = var.az_d
+  account_id            = var.account_id
+  tms_cert_arn          = aws_acm_certificate.tms_cert.arn
+  tms_route53_zone      = data.aws_route53_zone.tms.zone_id
+  tms_cert              = aws_acm_certificate_validation.tms_cert.certificate_arn
+  tms_cert_wildcard_arn = aws_acm_certificate.tms_cert_wildcard.arn
+  github_connection     = aws_codeconnections_connection.github.arn
 }
 
 module "fe" {
@@ -54,29 +55,29 @@ module "fe" {
   zone_id = data.aws_route53_zone.tms.zone_id
 }
 
-module "port" {
-  source             = "./modules/frontend-deployment"
-  project            = "portfolio"
-  acm_cert_arn       = aws_acm_certificate.tms_cert_wildcard.arn
-  bucket_name        = "tms-port-web-site"
-  github_connection  = aws_codeconnections_connection.github.arn
-  cloudfront_alias   = "port.kwondns.com"
-  github_fe_branch   = "main"
-  github_fe_repo     = "kwondns/portfolio"
-  github_fe_repo_url = "https://github.com/kwondns/portfolio"
-  environment_variables = {
-    vite_api_server_url = {
-      name  = "VITE_API_SERVER_URL"
-      value = "https://api.kwondns.com"
-    }
-
-    vite_image_url = {
-      name  = "VITE_IMAGE_URL"
-      value = "https://tms-portfolio.s3.ap-northeast-2.amazonaws.com"
-    }
-  }
-  zone_id = data.aws_route53_zone.tms.zone_id
-}
+# module "port" {
+#   source             = "./modules/frontend-deployment"
+#   project            = "portfolio"
+#   acm_cert_arn       = aws_acm_certificate.tms_cert_wildcard.arn
+#   bucket_name        = "tms-port-web-site"
+#   github_connection  = aws_codeconnections_connection.github.arn
+#   cloudfront_alias   = "port.kwondns.com"
+#   github_fe_branch   = "main"
+#   github_fe_repo     = "kwondns/portfolio"
+#   github_fe_repo_url = "https://github.com/kwondns/portfolio"
+#   environment_variables = {
+#     vite_api_server_url = {
+#       name  = "VITE_API_SERVER_URL"
+#       value = "https://api.kwondns.com"
+#     }
+#
+#     vite_image_url = {
+#       name  = "VITE_IMAGE_URL"
+#       value = "https://tms-portfolio.s3.ap-northeast-2.amazonaws.com"
+#     }
+#   }
+#   zone_id = data.aws_route53_zone.tms.zone_id
+# }
 
 module "drive" {
   source             = "./modules/frontend-deployment"
@@ -85,8 +86,8 @@ module "drive" {
   bucket_name        = "tms-drive-web-site"
   github_connection  = aws_codeconnections_connection.github.arn
   github_fe_branch   = "master"
-  github_fe_repo     = "jinlilac/drive"
-  github_fe_repo_url = "https://github.com/jinlilac/drive"
+  github_fe_repo     = "kwondns/drive"
+  github_fe_repo_url = "https://github.com/kwondns/drive"
   cloudfront_alias   = "drive.kwondns.com"
   environment_variables = {
     vite_api_url = {

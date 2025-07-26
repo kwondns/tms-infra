@@ -104,7 +104,7 @@ resource "aws_security_group" "tms_rds_sg" {
     from_port = var.db_port
     to_port   = var.db_port
     protocol  = "tcp"
-    security_groups = [aws_security_group.tms_lb_sg.id, aws_security_group.tms_ec2_sg.id]
+    security_groups = [aws_security_group.tms_lb_sg.id, aws_security_group.tms_ec2_sg.id, aws_security_group.lambda_sg.id]
   }
   egress {
     from_port = 0
@@ -131,3 +131,34 @@ resource "aws_security_group" "tms_rds_tmp_sg" {
   }
 }
 
+resource "aws_security_group" "lambda_sg" {
+  name_prefix = "timeline-chatbot-lambda-"
+  vpc_id      = aws_vpc.tms_vpc.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "timeline-chatbot-lambda-sg"
+  }
+}
+
+resource "aws_security_group" "efs_sg" {
+  name_prefix = "timeline-chatbot-efs-"
+  vpc_id      = aws_vpc.tms_vpc.id
+
+  ingress {
+    from_port       = 2049
+    to_port         = 2049
+    protocol        = "tcp"
+    security_groups = [aws_security_group.lambda_sg.id]
+  }
+
+  tags = {
+    Name = "timeline-chatbot-efs-sg"
+  }
+}

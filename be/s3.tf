@@ -42,6 +42,20 @@ resource "aws_s3_bucket" "artifact_bucket" {
   }
 }
 
+resource "aws_s3_bucket" "timeline-chatbot-artifact_bucket" {
+  bucket        = "${var.project}-timeline-chatbot-artifacts"
+  force_destroy = true
+
+  tags = {
+    Name = "${var.project}-timeline-chatbot-artifacts"
+  }
+}
+
+resource "aws_s3_bucket" "timeline_time_weighted_vector_store_bucket" {
+  bucket = "timeline-time-weighted-vector-store-memory"
+  force_destroy = true
+}
+
 resource "random_id" "bucket_suffix" {
   byte_length = 4
 }
