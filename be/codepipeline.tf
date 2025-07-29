@@ -137,7 +137,7 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         Action = [
           "codebuild:StartBuild", "codebuild:BatchGetBuilds"
         ],
-        Resource = [aws_codebuild_project.tms_build.arn]
+        Resource = [aws_codebuild_project.tms_build.arn, aws_codebuild_project.timeline_chatbot_build.arn]
       },
       {
         Effect = "Allow"
@@ -149,12 +149,14 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
           "codedeploy:GetDeploymentConfig",
           "codedeploy:RegisterApplicationRevision"
         ],
-        # Resource = [
-        #   aws_codedeploy_deployment_group.tms_backend.arn,
-        #   aws_codedeploy_app.tms_backend.arn,
-        #   "arn:aws:codedeploy:${var.region}:${var.account_id}:deploymentconfig:CodeDeployDefault.OneAtATime"
-        # ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = aws_lambda_function.timeline_chatbot.arn
       }
     ]
   })
@@ -190,17 +192,19 @@ resource "aws_codepipeline" "timeline_chatbot_pipeline" {
   }
 
   stage {
-    name = "Deploy"
+    name = "Build"
 
     action {
-      name     = "Timeline_Chatbot_Lambda_Deploy"
-      category = "Deploy"
+      name     = "Build_Docker_Image"
+      category = "Build"
       owner    = "AWS"
-      provider = "Lambda"
-      input_artifacts = ["source_output"]
+      provider = "CodeBuild"
       version  = "1"
+      input_artifacts = ["source_output"]
+      output_artifacts = ["build_output"]
+
       configuration = {
-        FunctionName = aws_lambda_function.timeline_chatbot.function_name
+        ProjectName = aws_codebuild_project.timeline_chatbot_build.name
       }
     }
   }

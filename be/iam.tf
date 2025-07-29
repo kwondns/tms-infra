@@ -145,8 +145,42 @@ resource "aws_iam_role_policy" "codebuild_policy" {
         ]
         Resource = [
           aws_s3_bucket.artifact_bucket.arn,
-          "${aws_s3_bucket.artifact_bucket.arn}/*"
+          "${aws_s3_bucket.artifact_bucket.arn}/*",
+          aws_s3_bucket.timeline-chatbot-artifact_bucket.arn,
+          "${aws_s3_bucket.timeline-chatbot-artifact_bucket.arn}/*"
         ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:GetAuthorizationToken",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:PutImage"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:UpdateFunctionCode",
+          "lambda:UpdateFunctionConfiguration",
+          "lambda:GetFunction",
+          "lambda:GetFunctionConfiguration"
+        ]
+        Resource = "arn:aws:lambda:ap-northeast-2:217260976611:function:timeline-chatbot-api"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:SetRepositoryPolicy",
+          "ecr:GetRepositoryPolicy"
+        ]
+        Resource = aws_ecr_repository.timeline_chatbot_repo.arn
       },
       {
         Effect = "Allow"

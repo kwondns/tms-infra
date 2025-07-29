@@ -11,6 +11,6 @@ output "ec2_lb_arn" {
   value = aws_lb_listener.tms_https.arn
 }
 
-# output "s3_archive_stream_bucket" {
-#   value = aws_s3_bucket.tms_archive_temp.bucket
-# }
+output "chatbot_lambda_url" {
+  value = aws_lambda_function_url.chatbot_lambda_function_url.function_url
+}

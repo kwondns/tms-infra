@@ -167,6 +167,10 @@ module "timeline" {
       name  = "VITE_IMAGE_URL"
       value = "https://tms-timeline.s3.ap-northeast-2.amazonaws.com"
     }
+    vite_chat_url = {
+      name = "VITE_CHAT_URL"
+      value = module.be.chatbot_lambda_url
+    }
   }
   zone_id = data.aws_route53_zone.tms.zone_id
 }
