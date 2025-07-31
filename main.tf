@@ -168,7 +168,7 @@ module "timeline" {
       value = "https://tms-timeline.s3.ap-northeast-2.amazonaws.com"
     }
     vite_chat_url = {
-      name = "VITE_CHAT_URL"
+      name = "VITE_CHATBOT_URL"
       value = module.be.chatbot_lambda_url
     }
   }
